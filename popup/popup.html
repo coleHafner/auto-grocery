@@ -1,0 +1,67 @@
+<!doctype html>
+<!--
+ This page is shown when the extension button is clicked, because the
+ "browser_action" field in manifest.json contains the "default_popup" key with
+ value "popup.html".
+ -->
+<html>
+
+<head>
+  <title>Getting Started Extension's Popup</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+      font-size: 100%;
+      width: 400px;
+      padding-bottom: 30px;
+    }
+
+    button {
+      padding: 10px 30px 10px 30px;
+      border: 0;
+      font-size: 15px;
+      font-family: arial;
+      margin: auto;
+      display: block;
+      color: white;
+      font-weight: bold;
+      border-radius: 3px;
+    }
+
+    button:hover {
+      cursor: pointer;
+    }
+
+    .save {
+      background-color: lightgreen;
+    }
+
+    .login {
+      background-color: #0079bf;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <a href="#" v-on:click="showAppSettings">options</a>
+    <div v-if="recipe">
+      <h1>{{ recipe.title }}</h1>
+      <h5>{{ recipe.subtitle }}</h5>
+      <ul>
+        <li v-for="ingr in recipe.ingredients">{{ ingr.qty }} {{ ingr.qtyUnit }} {{ ingr.name }}</li>
+      </ul>
+    </div>
+    <button class="login" v-if="!isLoggedIn" v-on:click="showAppSettings">Login to Trello</button>
+    <button class="save" v-if="isLoggedIn" v-on:click="save">Add To Grocery List</button>
+  </div>
+
+  <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/libs/trello-client.js"></script>
+  <script type="text/javascript" src="/libs/vue.csp-compliant.js"></script>
+  <script type="text/javascript" src="/libs/lodash.js"></script>
+  <script type="text/javascript" src="/configs/configs.js"></script>
+  <script type="text/javascript" src="/popup/popup.js"></script>
+</body>
+
+</html>

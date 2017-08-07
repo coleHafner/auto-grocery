@@ -60,17 +60,16 @@ $(function() {
 
     // send message to popup
     var payload = {
-        action: 'recipeScanComplete',
-        recipeFound: recipeFound,
-        recipe: recipe
+        [APP_STORAGE_KEY]: {
+            recipeFound: recipeFound,
+            recipe: recipe
+        }
     };
 
-    // chrome.runtime.sendMessage(chromeExtensionId, payload, {}, function() {
-    //     console.log('MESSAGE SENT WITH PAYLOAD', payload)
-    // });
+    console.log('PAYLOAD', payload);
 
     // save recipe to local storage
-    chrome.storage.local.set({'recipeScanResults': payload}, function() {
+    window.chrome.storage.local.set(payload, function() {
         console.log('RECIPE SAVED', payload);
     });
 

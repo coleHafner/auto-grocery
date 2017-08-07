@@ -1,0 +1,21 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <div id="app">
+            <h1>Auto Grocery - Settings</h1>
+            <div v-if="isLoggedIn">
+                <button v-on:click="logout">Logout</button>
+            </div>
+            <div v-if="!isLoggedIn">
+                <button v-on:click="login">Login to Trello</button>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/libs/trello-client.js"></script>
+        <script type="text/javascript" src="/libs/vue.csp-compliant.js"></script>
+        <script type="text/javascript" src="/configs/configs.js"></script>
+        <script type="text/javascript" src="/options/options.js"></script>
+    </body>
+</html>
