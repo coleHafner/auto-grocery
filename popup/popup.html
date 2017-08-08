@@ -22,7 +22,7 @@
       font-size: 15px;
       font-family: arial;
       margin: auto;
-      display: block;
+      display: inline-block;
       color: white;
       font-weight: bold;
       border-radius: 3px;
@@ -32,19 +32,61 @@
       cursor: pointer;
     }
 
-    .save {
+    .cta {
       background-color: lightgreen;
     }
 
-    .login {
+    .trello-cta {
       background-color: #0079bf;
+    }
+
+    .status {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #0079bf;
+      color: #000;
+    }
+
+    .error {
+      border-color: #ff0000;
+      background-color: pink;
+      color: #ff0000;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, .33);
+      z-index: 10;
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 100px;
+      width: 300px;
+      z-index: 11;
+      left: 60px;
+      background-color: #fff;
+      border-radius: 5px;
+    }
+
+    .modal-inner {
+      position: relative;
+      padding: 10px;
     }
   </style>
 </head>
 
 <body>
-  <div id="app">
-    <a href="#" v-on:click="showAppSettings">options</a>
+  <div id="popup">
+    <a href="#" v-on:click="showAppSettings">settings</a>
+    <div v-if="shouldShowStatus" v-bind:class="statusClasses">
+      {{ form.message }}
+    </div>
     <div v-if="recipe">
       <h1>{{ recipe.title }}</h1>
       <h5>{{ recipe.subtitle }}</h5>
@@ -52,8 +94,32 @@
         <li v-for="ingr in recipe.ingredients">{{ ingr.qty }} {{ ingr.qtyUnit }} {{ ingr.name }}</li>
       </ul>
     </div>
-    <button class="login" v-if="!isLoggedIn" v-on:click="showAppSettings">Login to Trello</button>
-    <button class="save" v-if="isLoggedIn" v-on:click="save">Add To Grocery List</button>
+    <button class="trello-cta" v-if="!isLoggedIn" v-on:click="showAppSettings">Login to Trello</button>
+    <button class="cta" v-if="isLoggedIn" v-on:click="save">Add To Grocery List</button>
+
+    <div class="modal-content" v-if="modal.show">
+      <div class="modal-inner">
+        <h3>{{ modal.title }}</h3>
+        <div v-if="modal.pickBoard">
+          <select v-model="selected.board">
+            <option value="">Select board</option>
+            <option v-for="board in boards" v-bind:value="board">{{ board.name }}</option>
+          </select>
+          <br/>
+          <label>
+            <input type="checkbox" v-model="selected.setBoardAsDefault" />
+            Set as default
+          </label>
+
+          <div>
+            <button class="cta" v-on:click="saveBoard">Save BB</button>
+            <button v-on:click="hideModal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" v-if="modal.show">&nbsp;</div>
   </div>
 
   <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>

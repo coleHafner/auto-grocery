@@ -1,5 +1,5 @@
 new Vue({
-    el: '#app',
+    el: '#options',
     created() {
         window.Trello.setKey(TRELLO_APP_KEY);
 
@@ -13,7 +13,6 @@ new Vue({
                 name: APP_NAME,
                 persist: true,
                 success() {
-                    console.log('TRELLO LOGIN SUCCESS');
                     window.Trello.setToken(token);
                 },
                 error(err) {
