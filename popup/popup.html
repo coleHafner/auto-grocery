@@ -100,19 +100,22 @@
     <div class="modal-content" v-if="modal.show">
       <div class="modal-inner">
         <h3>{{ modal.title }}</h3>
-        <div v-if="modal.pickBoard">
-          <select v-model="selected.board">
+        <div v-if="modal.action === 'pickBoard'">
+
+          <select v-model="selected.board" v-show="form.boards.length">
             <option value="">Select board</option>
-            <option v-for="board in boards" v-bind:value="board">{{ board.name }}</option>
+            <option v-for="board in form.boards" v-bind:value="board">{{ board.name }}</option>
+          </select>
+
+          <br/>
+          <select v-model="selected.list" v-show="form.lists.length">
+            <option value="">Select list</option>
+            <option v-for="list in form.lists" v-bind:value="list">{{ list.name }}</option>
           </select>
           <br/>
-          <label>
-            <input type="checkbox" v-model="selected.setBoardAsDefault" />
-            Set as default
-          </label>
 
           <div>
-            <button class="cta" v-on:click="saveBoard">Save BB</button>
+            <button class="cta" v-on:click="saveRecipe">Save</button>
             <button v-on:click="hideModal">Cancel</button>
           </div>
         </div>
