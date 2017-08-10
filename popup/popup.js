@@ -231,10 +231,9 @@ function saveRecipe() {
         })
         .then(cards => {
             let promises = [],
+                delim = '-',
                 formatCardName = function(ingr) {
-                    let delim = '-',
-                        qtyStr = ingr.qtyUnit ? `${ingr.qty} ${ingr.qtyUnit}` : ingr.qty;
-
+                    let qtyStr = ingr.qtyUnit ? `${ingr.qty} ${ingr.qtyUnit}` : ingr.qty;
                     return `${ingr.name} ${delim} ${qtyStr}`;
                 };
 
@@ -248,13 +247,27 @@ function saveRecipe() {
                     // find quantity and increment it
                     if (matchedCard.name.indexOf(delim) > -1) {
                         // @TODO blue apron recipes have fractions like 3/4, convert those to decimals for easy addition
-                        let curQty = matchedCard.name.split(delim)[1].split(' ')[0];
-                            newQty = parseInt(curQty) + parseInt(ingr.qty);
+                        let curQty = matchedCard.name.split(delim)[1].trim().split(' ')[0],
+                            ingrQty = ingr.qty;
+
+                        // detect fractions
+                        if (['¼', '½', '¾'].indexOf(ingrQty) > -1) {
+
+                            if (ingrQty.indexOf('¾') > -1) {
+                                ingrQty = Number(ingrQty.replace('¾', '')) + .75;
+
+                            }else if (ingrQty.indexOf('½') > -1) {
+                                ingrQty = Number(ingrQty.replace('½', '')) + .5;
+
+                            }else if (ingrQty.indexOf('¼') > -1) {
+                                ingrQty = Number(ingrQty.replace('¼', '')) + .25;
+                            }
+                        }
 
                         cardName = formatCardName({
+                            qty: Number(curQty) + Number(ingrQty),
                             qtyUnit: ingr.qtyUnit,
                             name: ingr.name,
-                            qty: newQty
                         });
 
                         matchedCard.name = cardName;
