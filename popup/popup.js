@@ -14,8 +14,8 @@ grabRecipe()
         return grabSettings();
     })
     .then(settings => {
-        app.settings.defaultBoard =  settings && settings.defaultBoard ? settings.defaultBoard : '';
-        app.settings.defaultList =  settings && settings.defaultList ? settings.defaultList : '';
+        app.settings.defaultBoard = settings && settings.defaultBoard ? settings.defaultBoard : '';
+        app.settings.defaultList = settings && settings.defaultList ? settings.defaultList : '';
 
         new Vue({
             el: '#popup',
@@ -45,7 +45,7 @@ grabRecipe()
                 onCreated.apply(this, [app.recipe, app.settings]);
             },
             watch: {
-                'selected.board': function(newVal, oldVal) {
+                'selected.board': function (newVal, oldVal) {
                     this.showLists();
                 }
             },
@@ -71,7 +71,7 @@ grabRecipe()
 
 function grabSettings() {
     return new Promise((resolve, reject) => {
-        window.chrome.storage.local.get(APP_STORAGE_KEY, function(results) {
+        window.chrome.storage.local.get(APP_STORAGE_KEY, function (results) {
             resolve(results[APP_STORAGE_KEY].settings);
         })
     });
@@ -79,7 +79,7 @@ function grabSettings() {
 
 function grabRecipe() {
     return new Promise((resolve, reject) => {
-        window.chrome.storage.local.get(APP_STORAGE_KEY, function(results) {
+        window.chrome.storage.local.get(APP_STORAGE_KEY, function (results) {
             console.log('GOT RESULTS', results);
             let recipe = results[APP_STORAGE_KEY] ? results[APP_STORAGE_KEY].recipe : null;
             resolve(recipe);
@@ -202,7 +202,7 @@ function saveRecipe() {
             [APP_STORAGE_KEY]: {
                 settings: {
                     defaultBoard: {
-                        id: this.selected.board.id, 
+                        id: this.selected.board.id,
                         name: this.selected.board.name
                     },
                     defaultList: {
@@ -211,7 +211,7 @@ function saveRecipe() {
                     }
                 }
             }
-        }, function() {
+        }, function () {
             resolve(true);
         });
     })
@@ -224,7 +224,7 @@ function saveRecipe() {
                     return;
                 }
 
-                window.Trello.get(`lists/${this.selected.list.id}/cards`, {}, function(cards) {
+                window.Trello.get(`lists/${this.selected.list.id}/cards`, {}, function (cards) {
                     resolve(cards);
                 });
             });
@@ -232,61 +232,55 @@ function saveRecipe() {
         .then(cards => {
             let promises = [],
                 delim = '-',
-                formatCardName = function(ingr) {
+                formatCardName = function (ingr, omitQty = false) {
                     let qtyStr = ingr.qtyUnit ? `${ingr.qty} ${ingr.qtyUnit}` : ingr.qty;
-                    return `${ingr.name} ${delim} ${qtyStr}`;
+                    return omitQty === true
+                        ? `${ingr.name} ${delim}`
+                        : `${ingr.name} ${delim} ${qtyStr}`
                 };
 
             this.recipe.ingredients.forEach(ingr => {
-
-                let cardName = formatCardName(ingr),
-                    matchedCard = _.find(cards, {name: cardName});
+                let cardName = formatCardName({
+                        qty: getTotalQty(ingr.qty, 0),
+                        qtyUnit: ingr.qtyUnit,
+                        name: ingr.name
+                    }),
+                    partialCardName = formatCardName(ingr, true),
+                    matchedCard = _.find(cards, (card) => {
+                        return card.name.indexOf(partialCardName) > -1;
+                    });
 
                 // match to a card
                 if (matchedCard !== undefined) {
-                    // find quantity and increment it
-                    if (matchedCard.name.indexOf(delim) > -1) {
-                        // @TODO blue apron recipes have fractions like 3/4, convert those to decimals for easy addition
-                        let curQty = matchedCard.name.split(delim)[1].trim().split(' ')[0],
-                            ingrQty = ingr.qty;
+                    // @TODO blue apron recipes have fractions like 3/4, convert those to decimals for easy addition
+                    let curQty = Number(matchedCard.name.split(delim)[1].trim().split(' ')[0]);
 
-                        // detect fractions
-                        if (['¼', '½', '¾'].indexOf(ingrQty) > -1) {
-
-                            if (ingrQty.indexOf('¾') > -1) {
-                                ingrQty = Number(ingrQty.replace('¾', '')) + .75;
-
-                            }else if (ingrQty.indexOf('½') > -1) {
-                                ingrQty = Number(ingrQty.replace('½', '')) + .5;
-
-                            }else if (ingrQty.indexOf('¼') > -1) {
-                                ingrQty = Number(ingrQty.replace('¼', '')) + .25;
-                            }
-                        }
-
-                        cardName = formatCardName({
-                            qty: Number(curQty) + Number(ingrQty),
-                            qtyUnit: ingr.qtyUnit,
-                            name: ingr.name,
-                        });
-
-                        matchedCard.name = cardName;
+                    if (isNaN(curQty)) {
+                        curQty = 0;
                     }
+
+                    cardName = formatCardName({
+                        qty: getTotalQty(ingr.qty, curQty),
+                        qtyUnit: ingr.qtyUnit,
+                        name: ingr.name
+                    });
+
+                    matchedCard.name = cardName;
 
                     // update existing card with new qty
                     promises.push(
                         new Promise((resolve, reject) => {
-                            window.Trello.put(`cards/${matchedCard.id}/name?value=${encodeURIComponent(cardName)}`, {}, function(updatedCard) {
+                            window.Trello.put(`cards/${matchedCard.id}/name?value=${encodeURIComponent(cardName)}`, {}, function (updatedCard) {
                                 resolve(updatedCard);
                             })
                         })
                     );
-                    
-                }else {
+
+                } else {
                     // create new card
                     promises.push(
                         new Promise((resolve, reject) => {
-                            window.Trello.post(`cards?idList=${this.selected.list.id}&name=${encodeURIComponent(cardName)}`, {}, function(newCard) {
+                            window.Trello.post(`cards?idList=${this.selected.list.id}&name=${encodeURIComponent(cardName)}`, {}, function (newCard) {
                                 resolve(newCard);
                             });
                         })
@@ -303,6 +297,33 @@ function saveRecipe() {
         });
 }
 
+function getTotalQty(qty, curQty) {
+    let ingrQtyCopy = qty;
+
+    // add up quantity
+    for (var i = 0, len = qty.length; i < len; ++i) {
+        let char = qty.charAt(i),
+            charCode = qty.charCodeAt(i),
+            foundFraction = [188, 189, 190].indexOf(charCode) > -1;
+
+        if (foundFraction) {
+            if (charCode === 188) {
+                curQty += .25;
+
+            } else if (charCode === 189) {
+                curQty += .5;
+
+            } else if (charCode === 190) {
+                curQty += .75;
+            }
+            ingrQtyCopy = ingrQtyCopy.replace(char, '');
+        }
+    }
+
+    curQty += Number(ingrQtyCopy);
+    return curQty;
+}
+
 function showLists() {
     if (!this.selected.board) {
         this.showError('Cannot find selected board. Cannot continue.');
@@ -317,7 +338,7 @@ function showLists() {
 
     // find lists for selected board
     return new Promise((resolve, reject) => {
-        window.Trello.get(`boards/${this.selected.board.id}/lists`, {cards: 'all'}, function(lists) {
+        window.Trello.get(`boards/${this.selected.board.id}/lists`, { cards: 'all' }, function (lists) {
             resolve(lists);
         });
     })
@@ -341,7 +362,7 @@ function save() {
             return;
         }
 
-        window.Trello.get('members/me/boards', {}, function(boards) {
+        window.Trello.get('members/me/boards', {}, function (boards) {
             resolve(boards);
         });
     })

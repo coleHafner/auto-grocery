@@ -40,7 +40,7 @@
       background-color: #0079bf;
     }
 
-    .status {
+    .status, .modal-status {
       padding: 10px;
       text-align: center;
       border: 1px solid #0079bf;
@@ -100,6 +100,7 @@
     <div class="modal-content" v-if="modal.show">
       <div class="modal-inner">
         <h3>{{ modal.title }}</h3>
+        <div class="modal-status error" v-if="modal.message">{{ modal.message }}</div>
         <div v-if="modal.action === 'pickBoard'">
 
           <select v-model="selected.board" v-show="form.boards.length">
