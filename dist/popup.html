@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+ This page is shown when the extension button is clicked, because the
+ "browser_action" field in manifest.json contains the "default_popup" key with
+ value "popup.html".
+ -->
+<html>
+
+<head>
+  <title>Getting Started Extension's Popup</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+      font-size: 100%;
+      width: 400px;
+      padding-bottom: 30px;
+    }
+
+    button {
+      padding: 10px 30px 10px 30px;
+      border: 0;
+      font-size: 15px;
+      font-family: arial;
+      margin: auto;
+      display: inline-block;
+      color: white;
+      font-weight: bold;
+      border-radius: 3px;
+    }
+
+    button:hover {
+      cursor: pointer;
+    }
+
+    .cta {
+      background-color: lightgreen;
+    }
+
+    .trello-cta {
+      background-color: #0079bf;
+    }
+
+    .status, .modal-status {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #0079bf;
+      color: #000;
+    }
+
+    .error {
+      border-color: #ff0000;
+      background-color: pink;
+      color: #ff0000;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, .33);
+      z-index: 10;
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 100px;
+      width: 300px;
+      z-index: 11;
+      left: 60px;
+      background-color: #fff;
+      border-radius: 5px;
+    }
+
+    .modal-inner {
+      position: relative;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <vue-popup></vue-popup>
+  </div>
+
+  
+  <script type="text/javascript" src="/libs/trello-client.js"></script>
+  <script type="text/javascript" src="/bundles/popup.bundle.js"></script>
+</body>
+
+</html>
