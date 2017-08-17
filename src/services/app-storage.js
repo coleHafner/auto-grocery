@@ -22,6 +22,22 @@ export default {
             })
         });
     },
+    setRecipe(recipe) {
+        let recipeFound = recipe.ingredients.length > 0;
+
+         // send message to popup
+        var payload = {
+            [config.APP_STORAGE_KEY]: {
+                recipeFound: recipeFound,
+                recipe: recipe
+            }
+        };
+
+        // save recipe to local storage
+        window.chrome.storage.local.set(payload, function() {
+            console.log('RECIPE SAVED', payload);
+        });
+    },
     updateSettings({
         boardId,
         boardName,

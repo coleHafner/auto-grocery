@@ -1,5 +1,5 @@
 <template lang="pug">
-#popup
+div
     a(href='#', v-on:click='showAppSettings') settings
     div(v-if='shouldShowStatus', v-bind:class='statusClasses')
         | {{ form.message }}
@@ -34,8 +34,12 @@
 
 import _ from 'lodash';
 import config from 'configs/configs';
+import Trello from 'services/trello-client';
 import appStorage from 'services/app-storage';
 import recipeParser from 'services/recipe-parser';
+
+//set trello on global window object
+Trello();
 
 export default {
     name: 'vue-popup',
@@ -84,9 +88,10 @@ export default {
         showLists,
         save
     }
-}
+};
 
 function created() {
+    console.log('POPUP CREATED...');
     let recipe;
 
     appStorage.getRecipe()

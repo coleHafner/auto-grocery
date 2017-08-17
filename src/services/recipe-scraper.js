@@ -1,9 +1,10 @@
 console.log('in CONTENT.JS');
 
+import $ from 'jQuery';
+import appStorage from 'services/app-storage';
+
 $(function() {
-    var chromeExtensionId = 'cefkioilmpggmhflfcdcfbcocdddhgph',
-        url = window.location.href,
-        recipeFound = false,
+    var url = window.location.href,
         SRC_BLUEAPRON = 'blueapron',
         recipe = {
             src: '',
@@ -29,7 +30,6 @@ $(function() {
 
     if (/blueapron.com\/recipes\/.+$/.test(url) === true) {
         recipe.src = SRC_BLUEAPRON;
-        recipeFound = true;
 
         // set title
         recipe.title = cleanText($('.ba-recipe-title__main').text());
@@ -57,20 +57,5 @@ $(function() {
     }
 
     console.log('recipe', recipe);
-
-    // send message to popup
-    var payload = {
-        [APP_STORAGE_KEY]: {
-            recipeFound: recipeFound,
-            recipe: recipe
-        }
-    };
-
-    console.log('PAYLOAD', payload);
-
-    // save recipe to local storage
-    window.chrome.storage.local.set(payload, function() {
-        console.log('RECIPE SAVED', payload);
-    });
-
+    appStorage.setRecipe(recipe);
 });
