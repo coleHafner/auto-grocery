@@ -62,5 +62,19 @@ export default {
                 resolve(true);
             });
         })
+    },
+    resetSettings() {
+        return new Promise((resolve, reject) => {
+            window.chrome.storage.sync.set({
+                [config.APP_STORAGE_KEY]: {
+                    settings: {
+                        defaultBoard: null,
+                        defaultList: null
+                    }
+                }
+            }, function() {
+                resolve(true);
+            });
+        });
     }
 }

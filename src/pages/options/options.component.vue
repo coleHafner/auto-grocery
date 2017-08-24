@@ -4,9 +4,13 @@ div
     div(v-if='isLoggedIn')
         .form-group
             label Selected Board:
-            span(v-if='selected.board') {{ selected.board.name }} 
-            span(v-else) None selected 
-            a(href='#') Change
+            div(v-if="!selecting.board")
+                span(v-if='selected.board') {{ selected.board.name }} 
+                span(v-else) None selected 
+                a(href='#' v-on:click="showBoards") Change
+            select(v-else v-model="selected.board")
+                option(v-for="board in form.boards")
+            
         .form-group
             label Selected List:
             span(v-if='selected.list') {{ selected.list.name }} 
@@ -31,17 +35,34 @@ export default {
     name: 'vue-options',
     data() {
         return {
+            form: {
+                boards: [],
+                lists: []
+            },
+            selecting: {
+                board: false,
+                list: false,
+            },
             selected: {
                 board: '',
-                list: '',
-                cards: ''
+                list: ''
             }
         };
     },
     created,
+    watch: {
+        'selected.board': {
+            deep: true,
+            handler(newVal, oldVal) {
+                this.showLists();
+            }
+        }
+    },
     methods: {
         login,
-        logout
+        logout,
+        showLists,
+        showBoards
     },
     computed: {
         trelloToken,
@@ -51,9 +72,13 @@ export default {
 
 function created(settings) {
     // set token if we got it.
-    if (window.location.hash.indexOf('token') > -1) {
+    if (window.location.hash.indexOf('token') > -1 || this.trelloToken) {
         return new Promise((resolve, reject) => {
-            let token = window.location.hash.split('token=')[1];
+
+            let token = window.location.hash.indexOf('token') 
+                ? window.location.hash.split('token=')[1] 
+                : this.trelloToken;
+
             window.Trello.authorize({
                 expiration: 'never',
                 scope: config.TRELLO_PERMS,
@@ -120,7 +145,43 @@ function login() {
 }
 
 function logout() {
-    window.Trello.deauthorize();
-    window.location.reload();
+    // torch the settings
+    appStorage.resetSettings()
+        .then(() => {
+            window.Trello.deauthorize();
+            window.location.reload();
+        })
+        .catch(() => {
+            window.Trello.deauthorize();
+            window.location.reload();
+        });
+}
+
+function showBoards() {
+    new Promise((resolve, reject) => {
+        window.Trello.get('members/me/boards', {}, function (boards) {
+            resolve(boards);
+        });
+    })
+        .then(boards => {
+            this.form.boards = boards;
+            this.selecting.board = true;
+        });
+}
+
+function showLists() {
+    if (!this.selected.board.id) {
+        throw new Error('No board is selected. Cannot continue.');
+    }
+
+    new Promise((resolve, reject) => {
+        window.Trello.get(`boards/${this.selected.board.id}/lists`, {}, function (lists) {
+            resolve(lists);
+        })
+            .then(lists => {
+                this.form.lists = lists;
+                this.selecting.list = true;
+            });
+    });
 }
 </script>

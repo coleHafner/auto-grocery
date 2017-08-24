@@ -33,14 +33,22 @@ const wrapper = function (window, jQuery, opts) {
   const { location } = window;
 
   var Trello = {
-    version() { return version; },
+    version() { 
+      return version; 
+    },
 
-    key() { return key; },
+    key() { 
+      return key; 
+    },
+
     setKey(newKey) {
       key = newKey;
     },
 
-    token() { return token; },
+    token() { 
+      return token; 
+    },
+
     setToken(newToken) {
       token = newToken;
     },
@@ -84,7 +92,9 @@ const wrapper = function (window, jQuery, opts) {
     },
 
     // Has Trello been authorized to issue requests on a user's behalf?
-    authorized() { return (token != null); },
+    authorized() { 
+      return (token != null && token !== ''); 
+    },
 
     // Clear any existing authorization
     deauthorize() {
@@ -125,10 +135,14 @@ const wrapper = function (window, jQuery, opts) {
       };
 
       if (opts.persist) {
-        if (token == null) { token = readStorage("token"); }
+        if (!token) { 
+          token = readStorage("token");
+         }
       }
 
-      if (token == null) { token = __guard__(regexToken.exec(location.hash), x => x[1]); }
+      if (!token) { 
+        token = __guard__(regexToken.exec(location.hash), x => x[1]); 
+      }
 
       if (this.authorized()) {
         persistToken();

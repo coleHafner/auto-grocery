@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
+	devtool: 'source-map',
 	entry: {
 		popup: './src/pages/popup/popup.main.js',
 		options: './src/pages/options/options.main.js',

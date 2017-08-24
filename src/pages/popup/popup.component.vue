@@ -133,10 +133,10 @@ function created() {
             if (trelloToken) {
                 window.Trello.authorize({
                     expiration: 'never',
-                    scope: TRELLO_PERMS,
+                    scope: config.TRELLO_PERMS,
                     interactive: false,
                     type: 'redirect',
-                    name: APP_NAME,
+                    name: config.APP_NAME,
                     persist: true,
                     success() {
                         console.log('POPUP - TRELLO LOGIN SUCCESS');
@@ -224,13 +224,13 @@ function saveRecipe() {
         boardId: this.selected.board.id,
         boardName: this.selected.board.name,
         listId: this.selected.list.id,
-        listName: this.selcted.list.name
+        listName: this.selected.list.name
     })
         .then(() => {
             // get all cards for current list
             return new Promise((resolve, reject) => {
                 // if we already have cards, do it
-                if (this.selected.list.cards) {
+                if (this.selected.list.cards && this.selected.list.cards.length) {
                     resolve(this.selected.list.cards);
                     return;
                 }
