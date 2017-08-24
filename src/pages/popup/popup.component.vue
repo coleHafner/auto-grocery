@@ -3,11 +3,11 @@ div
     a(href='#', v-on:click='showAppSettings') settings
     div(v-if='shouldShowStatus', v-bind:class='statusClasses')
         | {{ form.message }}
-    div(v-if='recipe')
-        h1 {{ recipe.title }}
-        h5 {{ recipe.subtitle }}
+    div(v-if='computedRecipe')
+        h1 {{ computedRecipe.title }}
+        h5 {{ computedRecipe.subtitle }}
         ul
-            li(v-for='ingr in recipe.ingredients') {{ ingr.qty }} {{ ingr.qtyUnit }} {{ ingr.name }}
+            li(v-for='ingr in computedRecipe.ingredients') {{ ingr.qty }} {{ ingr.qtyUnit }} {{ ingr.name }}
     button.trello-cta(v-if='!isLoggedIn', v-on:click='showAppSettings') Login to Trello
     button.cta(v-if='isLoggedIn', v-on:click='save') Add To Grocery List
     .modal-content(v-if='modal.show')
@@ -31,6 +31,8 @@ div
 
 <script>
 'use strict';
+
+console.log('IN VUE POPUP COMPONENT FILE.');
 
 import _ from 'lodash';
 import config from 'configs/configs';
@@ -76,6 +78,7 @@ export default {
         statusClasses,
         trelloToken,
         isLoggedIn,
+        computedRecipe
     },
     methods: {
         showAppSettings,
@@ -168,6 +171,10 @@ function statusClasses() {
         error: this.form.status === 'error',
         status: true
     };
+}
+
+function computedRecipe() {
+    return this.recipe;
 }
 
 // methods

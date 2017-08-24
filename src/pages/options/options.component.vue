@@ -4,13 +4,13 @@ div
     div(v-if='isLoggedIn')
         .form-group
             label Selected Board:
-            span(v-if='selected.board') {{ selected.board.name }}
-            span(v-else='') None selected
+            span(v-if='selected.board') {{ selected.board.name }} 
+            span(v-else) None selected 
             a(href='#') Change
         .form-group
             label Selected List:
-            span(v-if='selected.list') {{ selected.list.name }}
-            span(v-else='') None selected
+            span(v-if='selected.list') {{ selected.list.name }} 
+            span(v-else) None selected 
             a(href='#') Change
         button(v-on:click='logout') Logout
     div(v-if='!isLoggedIn')
@@ -50,7 +50,30 @@ export default {
 };
 
 function created(settings) {
+    // set token if we got it.
+    if (window.location.hash.indexOf('token') > -1) {
+        return new Promise((resolve, reject) => {
+            let token = window.location.hash.split('token=')[1];
+            window.Trello.authorize({
+                expiration: 'never',
+                scope: config.TRELLO_PERMS,
+                interactive: false,
+                type: 'redirect',
+                name: config.APP_NAME,
+                persist: true,
+                success() {
+                    window.Trello.setToken(token);
+                    resolve(true);
+                },
+                error(err) {
+                    alert(`Error logging in to window.Trello. ${err}`);
+                    reject(err);
+                }
+            });
+        })
+    }
 
+    // update settings
     appStorage.getSettings()
         .then(settings => {
             window.Trello.setKey(config.TRELLO_APP_KEY);
@@ -63,28 +86,6 @@ function created(settings) {
             // set default list
             if (settings && settings.defaultList && settings.defaultList.id) {
                 this.selected.list = settings.defaultList;
-            }
-
-            if (window.location.hash.indexOf('token') > -1) {
-                return new Promise((resolve, reject) => {
-                    let token = window.location.hash.split('token=')[1];
-                    window.Trello.authorize({
-                        expiration: 'never',
-                        scope: config.TRELLO_PERMS,
-                        interactive: false,
-                        type: 'redirect',
-                        name: config.APP_NAME,
-                        persist: true,
-                        success() {
-                            window.Trello.setToken(token);
-                            resolve(true);
-                        },
-                        error(err) {
-                            alert(`Error logging in to window.Trello. ${err}`);
-                            reject(err);
-                        }
-                    });
-                })
             }
         });
 }
@@ -103,10 +104,10 @@ function login() {
     return new Promise((resolve, reject) => {
         window.Trello.authorize({
             expiration: 'never',
-            scope: TRELLO_PERMS,
+            scope: config.TRELLO_PERMS,
             interactive: true,
             type: 'redirect',
-            name: APP_NAME,
+            name: config.APP_NAME,
             persist: true,
             error(err) {
                 alert(`Error logging in to window.Trello. ${err}`);

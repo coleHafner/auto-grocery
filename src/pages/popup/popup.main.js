@@ -6,9 +6,8 @@ console.log('initializing popup MAIN');
 console.log('popupComponent');
 let vueConfig = {
     el: '#popup',
-    components: {
-        [popupComponent.name]: popupComponent
-    }
+    debug: true,
+    render: c => c(popupComponent)
 };
 
 console.log('vueConfig', vueConfig);

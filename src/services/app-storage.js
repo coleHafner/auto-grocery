@@ -6,7 +6,7 @@ export default {
     getSettings() {
         return new Promise((resolve, reject) => {
             window.chrome.storage.sync.get(config.APP_STORAGE_KEY, function (results) {
-                let settings = results[config.APP_STORAGE_KEY].settings;
+                let settings = results[config.APP_STORAGE_KEY] ? results[config.APP_STORAGE_KEY].settings : {};
                 console.log('GOT SETTINGS', settings);
                 resolve(settings);
             })
@@ -16,8 +16,8 @@ export default {
     getRecipe() {
         return new Promise((resolve, reject) => {
             window.chrome.storage.local.get(config.APP_STORAGE_KEY, function (results) {
-                console.log('GOT RECIPE', results);
                 let recipe = results[config.APP_STORAGE_KEY] ? results[config.APP_STORAGE_KEY].recipe : null;
+                console.log('GOT RECIPE', recipe);
                 resolve(recipe);
             })
         });
