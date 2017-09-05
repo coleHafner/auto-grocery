@@ -66,7 +66,8 @@ export default {
         'selected.board': {
             deep: true,
             handler(newVal, oldVal) {
-                if (!this.intialized) {
+                if (!this.initialized) {
+                    this.initialized = true;
                     return;
                 }
 
@@ -125,7 +126,6 @@ function created() {
         })
         .then(settings => {
             if (!settings || (!settings.defaultBoard || !settings.defaultList)) {
-                this.initialized = true;
                 return;
             }
 
@@ -138,10 +138,8 @@ function created() {
             if (settings.defaultList && settings.defaultList.id) {
                 this.selected.list = settings.defaultList;
             }
-            this.initialized = true;
         })
         .catch(err => {
-            this.initialized = true;
             utils.showError(err, 'Could not get settings');
         });
 }
@@ -157,6 +155,9 @@ function isLoggedIn() {
 
 // methods
 function login() {
+    // set the app key
+    window.Trello.setKey(config.TRELLO_APP_KEY);
+    
     return new Promise((resolve, reject) => {
         window.Trello.authorize({
             expiration: 'never',
