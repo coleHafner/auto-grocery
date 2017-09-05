@@ -17,7 +17,7 @@ div
             div(v-if="modal.action === 'pickBoard'")
                 select(v-model='selected.board', v-show='form.boards.length')
                     option(value='') Select board
-                    option(v-for='board in form.boards', v-bind:value='board') {{ board.name }}
+                    option(v-for='board in form.boards' v-bind:value='board') {{ board.name }}
                 br
                 select(v-model='selected.list', v-show='form.lists.length')
                     option(value='') Select list

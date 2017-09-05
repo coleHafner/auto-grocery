@@ -8,15 +8,25 @@ div
                 span(v-if='selected.board') {{ selected.board.name }} 
                 span(v-else) None selected 
                 a(href='#' v-on:click="showBoards") Change
-            select(v-else v-model="selected.board")
-                option(v-for="board in form.boards")
+            div(v-if="selecting.board")
+                select(v-model="selected.board")
+                    option(value="") Select Board
+                    option(v-for="board in form.boards" v-bind:value='board') {{ board.name }}
             
         .form-group
             label Selected List:
-            span(v-if='selected.list') {{ selected.list.name }} 
-            span(v-else) None selected 
-            a(href='#') Change
-        button(v-on:click='logout') Logout
+            div(v-if="!selecting.list")
+                span(v-if='selected.list') {{ selected.list.name }} 
+                span(v-else) None selected 
+                a(href='#' v-on:click="showLists") Change
+            div(v-if="selecting.list")
+                select(v-model="selected.list")
+                    option(value="") Select List
+                    option(v-for="list in form.lists" v-bind:value='list') {{ list.name }}
+        div(v-if="selecting.board || selecting.list" )
+            button(v-on:click='saveSettings') Save
+            button(v-on:click='cancel') Cancel
+        a(href="#" v-on:click='logout') Logout of Trello
     div(v-if='!isLoggedIn')
         button(v-on:click='login') Login to Trello
 </template>
@@ -27,6 +37,7 @@ div
 import appStorage from 'services/app-storage';
 import Trello from 'services/trello-client';
 import config from 'configs/configs';
+import utils from 'services/utils';
 
 // set trello on the global window object
 Trello();
@@ -35,6 +46,7 @@ export default {
     name: 'vue-options',
     data() {
         return {
+            initialized: false,
             form: {
                 boards: [],
                 lists: []
@@ -54,6 +66,11 @@ export default {
         'selected.board': {
             deep: true,
             handler(newVal, oldVal) {
+                if (!this.intialized) {
+                    return;
+                }
+
+                this.selected.list = '';
                 this.showLists();
             }
         }
@@ -61,8 +78,10 @@ export default {
     methods: {
         login,
         logout,
+        cancel,
         showLists,
-        showBoards
+        showBoards,
+        saveSettings
     },
     computed: {
         trelloToken,
@@ -70,48 +89,60 @@ export default {
     }
 };
 
-function created(settings) {
+function created() {
     // set token if we got it.
-    if (window.location.hash.indexOf('token') > -1 || this.trelloToken) {
-        return new Promise((resolve, reject) => {
+    let token = window.location.hash.indexOf('token') > -1
+        ? window.location.hash.split('token=')[1] 
+        : this.trelloToken;
 
-            let token = window.location.hash.indexOf('token') 
-                ? window.location.hash.split('token=')[1] 
-                : this.trelloToken;
-
-            window.Trello.authorize({
-                expiration: 'never',
-                scope: config.TRELLO_PERMS,
-                interactive: false,
-                type: 'redirect',
-                name: config.APP_NAME,
-                persist: true,
-                success() {
-                    window.Trello.setToken(token);
-                    resolve(true);
-                },
-                error(err) {
-                    alert(`Error logging in to window.Trello. ${err}`);
-                    reject(err);
-                }
-            });
-        })
+    if (!token) {
+        return;
     }
 
-    // update settings
-    appStorage.getSettings()
+    return new Promise((resolve, reject) => {
+        window.Trello.authorize({
+            expiration: 'never',
+            scope: config.TRELLO_PERMS,
+            interactive: false,
+            type: 'redirect',
+            name: config.APP_NAME,
+            persist: true,
+            success() {
+                // this is a fresh page load, so we have to set the app key again
+                window.Trello.setKey(config.TRELLO_APP_KEY);
+                window.Trello.setToken(token);
+                resolve(true);
+            },
+            error(err) {
+                utils.showError(`Error logging in to window.Trello. ${err}`);
+                reject(err);
+            }
+        });
+    })
+        .then(reply => {
+                // update settings
+            return appStorage.getSettings();
+        })
         .then(settings => {
-            window.Trello.setKey(config.TRELLO_APP_KEY);
+            if (!settings || (!settings.defaultBoard || !settings.defaultList)) {
+                this.initialized = true;
+                return;
+            }
 
             // set default board
-            if (settings && settings.defaultBoard && settings.defaultBoard.id) {
+            if (settings.defaultBoard && settings.defaultBoard.id) {
                 this.selected.board = settings.defaultBoard;
             }
 
             // set default list
-            if (settings && settings.defaultList && settings.defaultList.id) {
+            if (settings.defaultList && settings.defaultList.id) {
                 this.selected.list = settings.defaultList;
             }
+            this.initialized = true;
+        })
+        .catch(err => {
+            this.initialized = true;
+            utils.showError(err, 'Could not get settings');
         });
 }
 
@@ -135,7 +166,7 @@ function login() {
             name: config.APP_NAME,
             persist: true,
             error(err) {
-                alert(`Error logging in to window.Trello. ${err}`);
+                utils.showError(`Error logging in to window.Trello. ${err}`);
             },
             success(reply) {
                 resolve(true);
@@ -171,7 +202,8 @@ function showBoards() {
 
 function showLists() {
     if (!this.selected.board.id) {
-        throw new Error('No board is selected. Cannot continue.');
+        utils.showError('No board is selected. Cannot continue.');
+        return;
     }
 
     new Promise((resolve, reject) => {
@@ -183,5 +215,31 @@ function showLists() {
                 this.selecting.list = true;
             });
     });
+}
+
+function cancel() {
+    this.selecting.board = false;
+    this.selecting.list = false;
+}
+
+function saveSettings() {
+    if (!this.selected.board.id || !this.selected.list.id) {
+        utils.showError('You must select a board and a list.');
+        return;
+    }
+
+     appStorage.updateSettings({
+        boardId: this.selected.board.id,
+        boardName: this.selected.board.name,
+        listId: this.selected.list.id,
+        listName: this.selected.list.name
+    })
+        .then(reply => {
+            this.cancel();
+        })
+        .catch(err => {
+            utils.showError(err, 'Error savings settings.');
+            this.cancel();
+        });
 }
 </script>
