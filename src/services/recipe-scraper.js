@@ -58,16 +58,18 @@ $(function() {
             // set src
             recipe.src = SRC_ALLRECIPES;
             recipe.title = $('.recipe-summary__h1').text();
-            
+            console.log('recipe.title', recipe.title);
+
             let listExists = true,
                 listNum = 1;
 
             while (listExists) {
                 let listClass = `.list-ingredients-${listNum}`;
-                if (!$(listClass.length)) {
-                    listExists = false;
-                }
-                $(`${listClass} li span.recipe-ingred_txt`).each(function(ingr) { 
+                $(`${listClass} li span.recipe-ingred_txt`).each(function(ingr) {
+                    if ($(this).parent('label').attr('id') === 'btn-addtolist') {
+                        return;
+                    }
+                    console.log('INGR', ingr);
                     let ingrText = $(this).text(),
                         ingrSplit = ingrText.split(' '),
                         qty = ingrSplit.shift(),
@@ -78,16 +80,27 @@ $(function() {
                 });
 
                 listNum++;
+
+                console.log('listClass', listClass, $(listClass).length);
+                if (!$(listClass).length) {
+                    listExists = false;
+                }
             }
+
+            console.log('RECIPE', recipe);
         }
 
     recipe.url = url;
 
     if (/blueapron.com\/recipes\/.+$/.test(url) === true) {
+        console.log('MATCHED: BlueApron');
         scrapeBlueApron(recipe);
 
     } else if (/allrecipes.com\/recipe\/.+$/.test(url) === true) {
+        console.log('MATCHED: AllRecipes');
         scrapeAllRecipes(recipe);
+    } else {
+        console.log('NO MATCHES');
     }
 
     console.log('recipe', recipe);
